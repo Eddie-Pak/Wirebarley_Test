@@ -73,7 +73,7 @@ fun ExchangeScreen(
             WirebarleySpacer(WirebarleyDimens.Spacing.Small)
 
             // 조회시간
-            InfoRow("조회시간", uiState.data.timestamp.toString())
+            InfoRow("조회시간", uiState.data.formattedDate)
 
             WirebarleySpacer(WirebarleyDimens.Spacing.Small)
 

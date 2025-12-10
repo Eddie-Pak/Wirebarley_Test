@@ -6,5 +6,6 @@ data class ExchangeData(
     val currentRate: Double = 0.0,
     val sendAmount: String = "",
     val receiveAmount: String = "",
-    val timestamp: Long = 0L
+    val timestamp: Long = 0L,
+    val formattedDate: String = ""
 )

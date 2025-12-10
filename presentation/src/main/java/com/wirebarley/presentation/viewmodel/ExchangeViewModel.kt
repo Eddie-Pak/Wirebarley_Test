@@ -15,6 +15,9 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.text.DecimalFormat
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
@@ -51,7 +54,8 @@ class ExchangeViewModel @Inject constructor(
                                 data = state.data.copy(
                                     exchangeRates = rates,
                                     currentRate = currentRate,
-                                    timestamp = result.data.timestamp
+                                    timestamp = result.data.timestamp,
+                                    formattedDate = formatDate(result.data.timestamp)
                                 ),
                                 errorMessage = null
                             )
@@ -137,4 +141,10 @@ class ExchangeViewModel @Inject constructor(
     }
 
     private fun formatAmount(amount: Double): String = DecimalFormat("#,##0.00").format(amount)
+
+    private fun formatDate(timestamp: Long): String {
+        val date = Date(timestamp * 1000)
+        val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+        return formatter.format(date)
+    }
 }
