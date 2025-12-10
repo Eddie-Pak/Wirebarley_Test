@@ -3,6 +3,7 @@ package com.wirebarley.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wirebarley.domain.common.ApiResult
+import com.wirebarley.domain.common.FormatUtil
 import com.wirebarley.domain.common.UiState
 import com.wirebarley.domain.model.Currency
 import com.wirebarley.domain.model.ExchangeData
@@ -14,10 +15,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.text.DecimalFormat
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
@@ -55,7 +52,7 @@ class ExchangeViewModel @Inject constructor(
                                     exchangeRates = rates,
                                     currentRate = currentRate,
                                     timestamp = result.data.timestamp,
-                                    formattedDate = formatDate(result.data.timestamp)
+                                    formattedDate = FormatUtil.formatTimestamp(result.data.timestamp)
                                 ),
                                 errorMessage = null
                             )
@@ -125,7 +122,7 @@ class ExchangeViewModel @Inject constructor(
             _uiState.update { state ->
                 state.copy(
                     data = state.data.copy(
-                        receiveAmount = formatAmount(calculatedAmount)
+                        receiveAmount = FormatUtil.formatAmount(calculatedAmount)
                     ),
                     errorMessage = null
                 )
@@ -138,13 +135,5 @@ class ExchangeViewModel @Inject constructor(
                 )
             }
         }
-    }
-
-    private fun formatAmount(amount: Double): String = DecimalFormat("#,##0.00").format(amount)
-
-    private fun formatDate(timestamp: Long): String {
-        val date = Date(timestamp * 1000)
-        val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
-        return formatter.format(date)
     }
 }

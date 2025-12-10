@@ -27,11 +27,14 @@ object WirebarleyDimens {
 
     object Height {
         val Small = 28.dp
-        val Medium = 42.dp
     }
 
     object Shape {
         val Small = 4.dp
+    }
+
+    object Size {
+        val Large = 120.dp
     }
 }
 

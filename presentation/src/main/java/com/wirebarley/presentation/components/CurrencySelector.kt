@@ -17,7 +17,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import com.wirebarley.domain.model.Currency
+import com.wirebarley.presentation.R
 import com.wirebarley.presentation.ui.theme.WirebarleyDimens
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -25,7 +27,7 @@ import com.wirebarley.presentation.ui.theme.WirebarleyDimens
 fun CurrencySelector(
     selectedCurrency: Currency,
     onCurrencySelected: (Currency) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -42,7 +44,11 @@ fun CurrencySelector(
                 .width(WirebarleyDimens.Width.Large),
         ) {
             Text(
-                text = "${selectedCurrency.country} (${selectedCurrency.code})",
+                text = stringResource(
+                    R.string.currency_display_format,
+                    selectedCurrency.country,
+                    selectedCurrency.code
+                ),
                 style = MaterialTheme.typography.bodyLarge
             )
             ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
@@ -56,7 +62,11 @@ fun CurrencySelector(
                 DropdownMenuItem(
                     text = {
                         Text(
-                            text = "${currency.country} (${currency.code})",
+                            text = stringResource(
+                                R.string.currency_display_format,
+                                currency.country,
+                                currency.code
+                            ),
                             style = MaterialTheme.typography.bodyLarge
                         )
                     },
