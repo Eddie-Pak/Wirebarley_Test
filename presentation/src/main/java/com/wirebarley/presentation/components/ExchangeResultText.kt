@@ -4,6 +4,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.wirebarley.presentation.R
 
 @Composable
 fun ExchangeResultText(
@@ -24,7 +26,7 @@ fun ExchangeResultText(
         }
         receiveAmount.isNotEmpty() -> {
             Text(
-                text = "수취금액은 $receiveAmount $currencyCode 입니다.",
+                text = stringResource(R.string.receive_amount_format, receiveAmount, currencyCode),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = modifier,
             )

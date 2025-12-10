@@ -1,10 +1,9 @@
 package com.wirebarley.data.mapper
 
 import com.wirebarley.data.dto.ExchangeApiResponse
+import com.wirebarley.domain.common.FormatUtil
 import com.wirebarley.domain.model.Currency
 import com.wirebarley.domain.model.ExchangeRate
-import java.math.BigDecimal
-import java.math.RoundingMode
 
 fun ExchangeApiResponse.toDomain(): ExchangeRate {
     val rates = quotes?.mapNotNull { (key, value) ->
@@ -13,18 +12,11 @@ fun ExchangeApiResponse.toDomain(): ExchangeRate {
 
         val currency = Currency.entries.find { it.code == currencyCode }
 
-        currency?.let { it to truncateToTwoDecimals(value) }
+        currency?.let { it to FormatUtil.formatCurrency(value) }
     }?.toMap() ?: emptyMap()
 
     return ExchangeRate(
         rates = rates,
         timestamp = timestamp ?: 0L
     )
-}
-
-
-private fun truncateToTwoDecimals(value: Double): Double {
-    return BigDecimal.valueOf(value)
-        .setScale(2, RoundingMode.DOWN)
-        .toDouble()
 }

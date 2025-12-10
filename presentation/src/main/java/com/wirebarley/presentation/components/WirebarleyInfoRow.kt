@@ -16,9 +16,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import com.wirebarley.domain.model.Currency
+import com.wirebarley.presentation.R
 import com.wirebarley.presentation.ui.theme.WirebarleyDimens
 
 @Composable
@@ -45,7 +47,7 @@ fun InfoRowWithSelector(
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(
-            text = "수취국가 : ",
+            text = stringResource(R.string.label_receiving_country),
             modifier = Modifier.width(WirebarleyDimens.Width.Small),
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.End
@@ -62,7 +64,7 @@ fun InfoRowWithSelector(
 fun InfoRowWithAmount(amount: String, onValueChange: (String) -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(
-            text = "송금액 : ",
+            text = stringResource(R.string.label_send_amount),
             modifier = Modifier.width(WirebarleyDimens.Width.Small),
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.End
@@ -73,6 +75,7 @@ fun InfoRowWithAmount(amount: String, onValueChange: (String) -> Unit) {
             onValueChange = onValueChange,
             textStyle = MaterialTheme.typography.bodyMedium.copy(
                 textAlign = TextAlign.End,
+                color = MaterialTheme.colorScheme.onSurface
             ),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             singleLine = true,
@@ -99,6 +102,6 @@ fun InfoRowWithAmount(amount: String, onValueChange: (String) -> Unit) {
             }
         )
 
-        Text(text = " USD")
+        Text(text = stringResource(R.string.currency_usd))
     }
 }
