@@ -29,6 +29,7 @@ class JvmLibraryConventionPlugin : Plugin<Project> {
 
             dependencies {
                 add("implementation", libs.findBundle("coroutines").get())
+                add("implementation", libs.findLibrary("javax.inject").get())
                 add("testImplementation", libs.findBundle("test.unit").get())
             }
         }
