@@ -1,39 +1,75 @@
 package com.wirebarley.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.wirebarley.domain.common.ApiResult
+import com.wirebarley.domain.common.UiState
 import com.wirebarley.domain.model.Currency
 import com.wirebarley.domain.model.ExchangeData
-import com.wirebarley.domain.model.UiState
+import com.wirebarley.domain.usecase.CalculateExchangeUseCase
+import com.wirebarley.domain.usecase.GetExchangeRatesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.text.DecimalFormat
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
-class ExchangeViewModel @Inject constructor() : ViewModel() {
-    // mockData
-    private val mockExchangeRates = mapOf(
-        Currency.KRW to 1350.232,
-        Currency.JPY to 150.345,
-        Currency.PHP to 58.123
-    )
+class ExchangeViewModel @Inject constructor(
+    private val getExchangeRatesUseCase: GetExchangeRatesUseCase,
+    private val calculateExchangeUseCase: CalculateExchangeUseCase,
+) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(
-        UiState(
-            data = ExchangeData(
-                exchangeRates = mockExchangeRates,
-                currentRate = mockExchangeRates[Currency.KRW] ?: 0.0,
-                formattedRate = formatAmount(mockExchangeRates[Currency.KRW] ?: 0.0),
-                queryTime = getCurrentTime()
-            )
-        )
-    )
+    private val _uiState = MutableStateFlow(UiState(isLoading = true, data = ExchangeData()))
+
     val uiState get() = _uiState.asStateFlow()
+
+    init {
+        fetchExchangeRates()
+    }
+
+    private fun fetchExchangeRates() {
+        viewModelScope.launch {
+            getExchangeRatesUseCase().collectLatest { result ->
+                when (result) {
+                    is ApiResult.Loading -> {
+                        _uiState.update {
+                            it.copy(isLoading = true)
+                        }
+                    }
+
+                    is ApiResult.Success -> {
+                        val rates = result.data.rates
+                        val currentRate = rates[Currency.KRW] ?: 0.0
+
+                        _uiState.update { state ->
+                            state.copy(
+                                isLoading = false,
+                                data = state.data.copy(
+                                    exchangeRates = rates,
+                                    currentRate = currentRate,
+                                    timestamp = result.data.timestamp
+                                ),
+                                errorMessage = null
+                            )
+                        }
+                    }
+
+                    is ApiResult.Error -> {
+                        _uiState.update { state ->
+                            state.copy(
+                                isLoading = false,
+                                errorMessage = result.message
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     fun selectCurrency(currency: Currency) {
         val newRate = _uiState.value.data.exchangeRates[currency] ?: 0.0
@@ -43,7 +79,6 @@ class ExchangeViewModel @Inject constructor() : ViewModel() {
                 data = state.data.copy(
                     selectedCurrency = currency,
                     currentRate = newRate,
-                    formattedRate = formatAmount(newRate),
                     sendAmount = "",
                     receiveAmount = ""
                 ),
@@ -53,11 +88,12 @@ class ExchangeViewModel @Inject constructor() : ViewModel() {
     }
 
     fun updateSendAmount(amount: String) {
-        val sanitizedAmount = if (amount.length > 1 && amount.startsWith("0") && !amount.startsWith("0.")) {
-            amount.trimStart('0')
-        } else {
-            amount
-        }
+        val sanitizedAmount =
+            if (amount.length > 1 && amount.startsWith("0") && !amount.startsWith("0.")) {
+                amount.trimStart('0')
+            } else {
+                amount
+            }
 
         _uiState.update { state ->
             state.copy(
@@ -75,38 +111,30 @@ class ExchangeViewModel @Inject constructor() : ViewModel() {
             return
         }
 
-        calculateExchange(sanitizedAmount)
+        calculateExchange(sanitizedAmount, _uiState.value.data.currentRate)
     }
 
-    private fun calculateExchange(amount: String) {
-        val amountDouble = amount.toDoubleOrNull()
+    private fun calculateExchange(amount: String, rate: Double) {
+        val result = calculateExchangeUseCase(amount, rate)
 
-        // 유효성 검사
-        val isValid = amountDouble != null && amountDouble in 0.0..10000.0
-
-        if (!isValid) {
+        result.onSuccess { calculatedAmount ->
+            _uiState.update { state ->
+                state.copy(
+                    data = state.data.copy(
+                        receiveAmount = formatAmount(calculatedAmount)
+                    ),
+                    errorMessage = null
+                )
+            }
+        }.onFailure { exception ->
             _uiState.update { state ->
                 state.copy(
                     data = state.data.copy(receiveAmount = ""),
-                    errorMessage = "송금액이 바르지 않습니다"
+                    errorMessage = exception.message
                 )
             }
-            return
-        }
-
-        // 계산 로직
-        val result = amountDouble * _uiState.value.data.currentRate
-
-        _uiState.update { state ->
-            state.copy(
-                data = state.data.copy(receiveAmount = formatAmount(result)),
-                errorMessage = null
-            )
         }
     }
 
     private fun formatAmount(amount: Double): String = DecimalFormat("#,##0.00").format(amount)
-
-
-    private fun getCurrentTime(): String = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())
 }
