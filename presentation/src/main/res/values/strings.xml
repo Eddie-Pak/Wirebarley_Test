@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ExchangeScreen -->
+    <string name="exchange_title">환율 계산</string>
+    <string name="label_sending_country">송금국가</string>
+    <string name="label_receiving_country">수취국가 : </string>
+    <string name="label_exchange_rate">환율</string>
+    <string name="label_query_time">조회시간</string>
+    <string name="label_send_amount">송금액 : </string>
+
+    <string name="sending_country_usa">미국 (USD)</string>
+    <string name="currency_usd"> USD</string>
+
+    <!-- Exchange Rate Display -->
+    <string name="exchange_rate_format">%1$s %2$s / USD</string>
+
+    <!-- Exchange Result -->
+    <string name="receive_amount_format">수취금액은 %1$s %2$s 입니다.</string>
+
+    <!-- Currency Selector -->
+    <string name="currency_display_format">%1$s (%2$s)</string>
+</resources>
