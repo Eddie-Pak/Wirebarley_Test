@@ -1,8 +1,6 @@
 package com.wirebarley.data.repository
 
 import com.wirebarley.data.api.ExchangeApi
-import com.wirebarley.data.dto.ExchangeErrorResponse
-import com.wirebarley.data.dto.ExchangeSuccessResponse
 import com.wirebarley.data.mapper.toDomain
 import com.wirebarley.domain.common.ApiResult
 import com.wirebarley.domain.repository.ExchangeRepository
@@ -17,11 +15,12 @@ class ExchangeRepositoryImpl @Inject constructor(
 ) : ExchangeRepository {
     override fun getExchangeRates() = flow {
         emit(ApiResult.Loading)
+        val response = exchangeApi.getExchangeRates(apiKey)
 
-        when(val response = exchangeApi.getExchangeRates(apiKey)) {
-            is ExchangeSuccessResponse -> emit(ApiResult.Success(response.toDomain()))
-
-            is ExchangeErrorResponse -> emit(ApiResult.Error(response.error.info))
+        if (response.success) {
+            emit(ApiResult.Success(response.toDomain()))
+        } else {
+            emit(ApiResult.Error(response.error?.info ?: "잠시 후 다시 시도해주세요."))
         }
     }.catch { e ->
         emit(ApiResult.Error(e.message ?: "잠시 후 다시 시도해주세요."))

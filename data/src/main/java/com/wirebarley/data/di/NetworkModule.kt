@@ -2,7 +2,6 @@ package com.wirebarley.data.di
 
 import com.squareup.moshi.Moshi
 import com.wirebarley.data.api.ExchangeApi
-import com.wirebarley.data.dto.ExchangeResultAdapter
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,9 +21,7 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideMoshi(): Moshi = Moshi.Builder()
-        .add(ExchangeResultAdapter())
-        .build()
+    fun provideMoshi(): Moshi = Moshi.Builder().build()
 
     @Provides
     @Singleton
