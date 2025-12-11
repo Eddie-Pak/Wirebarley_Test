@@ -1,4 +1,4 @@
-package com.wirebarley.domain.common
+package com.wirebarley.presentation.util
 
 data class UiState<T>(
     val isLoading: Boolean = false,

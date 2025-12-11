@@ -4,11 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wirebarley.domain.common.ApiResult
 import com.wirebarley.domain.common.FormatUtil
-import com.wirebarley.domain.common.UiState
 import com.wirebarley.domain.model.Currency
 import com.wirebarley.domain.model.ExchangeData
 import com.wirebarley.domain.usecase.CalculateExchangeUseCase
 import com.wirebarley.domain.usecase.GetExchangeRatesUseCase
+import com.wirebarley.presentation.util.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,38 +34,32 @@ class ExchangeViewModel @Inject constructor(
     private fun fetchExchangeRates() {
         viewModelScope.launch {
             getExchangeRatesUseCase().collectLatest { result ->
-                when (result) {
-                    is ApiResult.Loading -> {
-                        _uiState.update {
-                            it.copy(isLoading = true)
-                        }
-                    }
+                _uiState.update { state ->
+                    when (result) {
+                        is ApiResult.Loading -> state.copy(isLoading = true)
 
-                    is ApiResult.Success -> {
-                        val rates = result.data.rates
-                        val currentRate = rates[Currency.KRW] ?: 0.0
+                        is ApiResult.Success -> {
+                            val rates = result.data.rates
+                            val targetCurrency = state.data.selectedCurrency
+                            val currentRate = rates[targetCurrency] ?: 0.0
 
-                        _uiState.update { state ->
                             state.copy(
                                 isLoading = false,
                                 data = state.data.copy(
                                     exchangeRates = rates,
                                     currentRate = currentRate,
+                                    selectedCurrency = targetCurrency,
                                     timestamp = result.data.timestamp,
                                     formattedDate = FormatUtil.formatTimestamp(result.data.timestamp)
                                 ),
                                 errorMessage = null
                             )
                         }
-                    }
 
-                    is ApiResult.Error -> {
-                        _uiState.update { state ->
-                            state.copy(
-                                isLoading = false,
-                                errorMessage = result.message
-                            )
-                        }
+                        is ApiResult.Error -> state.copy(
+                            isLoading = false,
+                            errorMessage = result.message
+                        )
                     }
                 }
             }
@@ -73,9 +67,9 @@ class ExchangeViewModel @Inject constructor(
     }
 
     fun selectCurrency(currency: Currency) {
-        val newRate = _uiState.value.data.exchangeRates[currency] ?: 0.0
-
         _uiState.update { state ->
+            val newRate = state.data.exchangeRates[currency] ?: 0.0
+
             state.copy(
                 data = state.data.copy(
                     selectedCurrency = currency,
@@ -89,51 +83,45 @@ class ExchangeViewModel @Inject constructor(
     }
 
     fun updateSendAmount(amount: String) {
-        val sanitizedAmount =
-            if (amount.length > 1 && amount.startsWith("0") && !amount.startsWith("0.")) {
-                amount.trimStart('0')
-            } else {
-                amount
-            }
+        val sanitizedAmount = sanitizeInput(amount)
 
         _uiState.update { state ->
-            state.copy(
-                data = state.data.copy(sendAmount = sanitizedAmount),
-                errorMessage = null
-            )
-        }
-
-        if (amount.isEmpty()) {
-            _uiState.update { state ->
-                state.copy(
-                    data = state.data.copy(receiveAmount = "")
-                )
-            }
-            return
-        }
-
-        calculateExchange(sanitizedAmount, _uiState.value.data.currentRate)
-    }
-
-    private fun calculateExchange(amount: String, rate: Double) {
-        val result = calculateExchangeUseCase(amount, rate)
-
-        result.onSuccess { calculatedAmount ->
-            _uiState.update { state ->
-                state.copy(
+            if (sanitizedAmount.isEmpty()) {
+                return@update state.copy(
                     data = state.data.copy(
-                        receiveAmount = FormatUtil.formatAmount(calculatedAmount)
+                        sendAmount = "",
+                        receiveAmount = ""
                     ),
                     errorMessage = null
                 )
             }
-        }.onFailure { exception ->
-            _uiState.update { state ->
-                state.copy(
-                    data = state.data.copy(receiveAmount = ""),
-                    errorMessage = exception.message
-                )
-            }
+
+            val (calculatedResult, errorMsg) = performCalculation(sanitizedAmount, state.data.currentRate)
+
+            state.copy(
+                data = state.data.copy(
+                    sendAmount = sanitizedAmount,
+                    receiveAmount = calculatedResult
+                ),
+                errorMessage = errorMsg
+            )
         }
+    }
+
+    private fun sanitizeInput(amount: String): String {
+        return if (amount.length > 1 && amount.startsWith("0") && !amount.startsWith("0.")) {
+            amount.trimStart('0')
+        } else {
+            amount
+        }
+    }
+
+    private fun performCalculation(amount: String, rate: Double): Pair<String, String?> {
+        val result = calculateExchangeUseCase(amount, rate)
+
+        return result.fold(
+            onSuccess = { FormatUtil.formatAmount(it) to null },
+            onFailure = { "" to (it.message ?: "계산 오류") }
+        )
     }
 }
