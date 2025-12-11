@@ -2,6 +2,7 @@ package com.wirebarley.data.di
 
 import com.squareup.moshi.Moshi
 import com.wirebarley.data.api.ExchangeApi
+import com.wirebarley.data.api.ExchangeAuthInterceptor
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -11,6 +12,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.util.concurrent.TimeUnit
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -25,13 +27,24 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient {
+    fun provideExchangeAuthInterceptor(
+        @Named("api_key") apiKey: String
+    ): ExchangeAuthInterceptor {
+        return ExchangeAuthInterceptor(apiKey)
+    }
+
+    @Provides
+    @Singleton
+    fun provideOkHttpClient(
+        exchangeAuthInterceptor: ExchangeAuthInterceptor
+    ): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         }
 
         return OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)
+            .addInterceptor(exchangeAuthInterceptor)
             .connectTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .readTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .writeTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
