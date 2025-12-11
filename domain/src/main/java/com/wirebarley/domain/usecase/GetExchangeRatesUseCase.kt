@@ -9,5 +9,5 @@ import javax.inject.Inject
 class GetExchangeRatesUseCase @Inject constructor(
     private val exchangeRepository: ExchangeRepository
 ) {
-    suspend operator fun invoke(): Flow<ApiResult<ExchangeRate>> = exchangeRepository.getExchangeRates()
+    operator fun invoke(): Flow<ApiResult<ExchangeRate>> = exchangeRepository.getExchangeRates()
 }
