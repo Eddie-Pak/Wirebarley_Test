@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wirebarley.domain.common.ApiResult
 import com.wirebarley.domain.common.FormatUtil
-import com.wirebarley.domain.common.UiState
+import com.wirebarley.presentation.util.UiState
 import com.wirebarley.domain.model.Currency
 import com.wirebarley.domain.model.ExchangeData
 import com.wirebarley.domain.usecase.CalculateExchangeUseCase
