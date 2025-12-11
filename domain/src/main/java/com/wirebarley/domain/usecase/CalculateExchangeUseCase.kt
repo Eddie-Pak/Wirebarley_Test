@@ -1,5 +1,6 @@
 package com.wirebarley.domain.usecase
 
+import java.math.BigDecimal
 import javax.inject.Inject
 
 class CalculateExchangeUseCase @Inject constructor() {
@@ -17,6 +18,8 @@ class CalculateExchangeUseCase @Inject constructor() {
             )
         }
 
-        return Result.success(amount * rate)
+        val calculatedAmount = BigDecimal(amount).multiply(BigDecimal.valueOf(rate))
+
+        return Result.success(calculatedAmount.toDouble())
     }
 }
