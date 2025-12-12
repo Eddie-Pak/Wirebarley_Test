@@ -57,13 +57,21 @@ class ExchangeAuthInterceptor @Inject constructor(
     @Named("apiKey") private val apiKey: String
 ) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
-        val newUrl = chain.request().url.newBuilder()
-            .addQueryParameter("access_key", apiKey)
-            .addQueryParameter("currencies", "KRW,JPY,PHP")
-            .addQueryParameter("source", "USD")
-            .addQueryParameter("format", "1")
+        val originalRequest = chain.request()
+        val originalUrl = originalRequest.url
+
+        val newUrl = originalUrl.newBuilder()
+            .addQueryParameter(QUERY_ACCESS_KEY, apiKey)
+            .addQueryParameter(QUERY_CURRENCIES, DEFAULT_CURRENCIES)
+            .addQueryParameter(QUERY_SOURCE, DEFAULT_SOURCE)
+            .addQueryParameter(QUERY_FORMAT, DEFAULT_FORMAT)
             .build()
-        return chain.proceed(chain.request().newBuilder().url(newUrl).build())
+
+        val newRequest = originalRequest.newBuilder()
+            .url(newUrl)
+            .build()
+
+        return chain.proceed(newRequest)
     }
 }
 ```
