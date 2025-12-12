@@ -97,7 +97,7 @@ class ExchangeViewModelTest {
             val item = awaitItem()
 
             assertEquals(inputAmount, item.data.sendAmount)
-            assertEquals("110000.00", item.data.receiveAmount)
+            assertEquals("110,000.00", item.data.receiveAmount)
             assertNull(item.errorMessage)
         }
     }
