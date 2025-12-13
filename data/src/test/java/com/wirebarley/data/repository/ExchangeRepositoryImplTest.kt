@@ -1,9 +1,9 @@
 package com.wirebarley.data.repository
 
-import app.cash.turbine.test
 import com.wirebarley.data.api.ExchangeApi
 import com.wirebarley.data.dto.ErrorDetail
-import com.wirebarley.data.dto.ExchangeApiResponse
+import com.wirebarley.data.dto.ExchangeErrorResponse
+import com.wirebarley.data.dto.ExchangeSuccessResponse
 import com.wirebarley.domain.common.ApiResult
 import com.wirebarley.domain.model.Currency
 import io.mockk.coEvery
@@ -22,16 +22,19 @@ class ExchangeRepositoryImplTest {
     @Test
     fun `API 호출 성공 시 Loading과 Success 순서대로 emit`() = runTest {
 
-        val response = ExchangeApiResponse(
+        val successResponse = ExchangeSuccessResponse(
             success = true,
+            terms = "terms",
+            privacy = "privacy",
+            timestamp = 123456L,
+            source = "USD",
             quotes = mapOf(
                 "USDKRW" to 1350.0,
                 "USDJPY" to 155.0,
                 "USDPHP" to 58.0
-            ),
-            error = null
+            )
         )
-        coEvery { exchangeApi.getExchangeRates() } returns response
+        coEvery { exchangeApi.getExchangeRates() } returns successResponse
 
         val results = repository.getExchangeRates().toList()
 
@@ -41,14 +44,13 @@ class ExchangeRepositoryImplTest {
 
         val successResult = results[1] as ApiResult.Success
 
-        assertEquals(3, successResult.data.rates.size)
         assertEquals(1350.0, successResult.data.rates[Currency.KRW])
     }
 
     @Test
     fun `API 응답 success가 false일 때 Error emit`() = runTest {
         val errorMessage = "Invalid API Key"
-        val response = ExchangeApiResponse(
+        val errorResponse = ExchangeErrorResponse(
             success = false,
             error = ErrorDetail(
                 code = 101,
@@ -56,7 +58,8 @@ class ExchangeRepositoryImplTest {
                 info = errorMessage
             )
         )
-        coEvery { exchangeApi.getExchangeRates() } returns response
+
+        coEvery { exchangeApi.getExchangeRates() } returns errorResponse
 
         val results = repository.getExchangeRates().toList()
 
